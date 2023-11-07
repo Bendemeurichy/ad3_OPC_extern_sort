@@ -10,13 +10,15 @@
 
 
 void buildPrefixList(node* current, struct node* nodeList[], char* prefix, int index, int* nodeListIndex);
-node *processFrequency(int frequency[]);
+node **processFrequency(int frequency[],int nodeCount);
 node *create_prefix_tree(linkedList *nodes);
 node *merge(linkedList *nodes);
 int find_min_compatible(linkedList* nodes, int i);
 int findminimum(linkedList* nodes,int i);
 void merge_nodes(linkedList* nodes,int i,int j,int depth);
 void construct_level(linkedList* nodes, int level);
+void cleanupInternalNodes(node* nodes);
+node** linked_list_to_array(linkedList* nodes);
 
 
 

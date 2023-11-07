@@ -32,9 +32,9 @@ void addNode(linkedList* ,node*,int compatible);
 void addNodeOnPosition(linkedList* list, node* newVal,int index, int compatible);
 void removeNode(linkedList * ,node*);
 void removeList(linkedList*);
-void sortList(linkedList**);
 linkedList * copyList(linkedList*);
-linked_node * get_node(linkedList * list,int i);
+linked_node * get_node_by_index(linkedList * list,int i);
+linked_node * get_node_by_value(linkedList * list,char value);
 int get_firt_index_at_level(linkedList * list,int start,int level);
 
 #endif //AD3_PROJECT_LINKED_LIST_H

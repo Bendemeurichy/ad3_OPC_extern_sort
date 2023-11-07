@@ -115,29 +115,7 @@ int cmpfunc (const void * a, const void * b) {
     return ( nodeA->value - nodeB->value );
 }
 
-void sortList(linkedList** list){
-    node* sortingArray[(*list)->size];
-    linked_node* currentNode=(*list)->firstNode;
-    int i=0;
-    while (currentNode!=NULL){
-        sortingArray[i]=currentNode->val;
-        currentNode=currentNode->next;
-        i++;
-    }
-    qsort(sortingArray,(*list)->size,sizeof (node*),cmpfunc);
-
-
-    linkedList *sortedList=createList(sortingArray[0]);
-    i=1;
-    while (i<(*list)->size){
-        addNode(sortedList,sortingArray[i],1);
-        i++;
-    }
-    removeList(*list);
-    (*list)=sortedList;
-}
-
-linked_node * get_node(linkedList * list,int i){
+linked_node * get_node_by_index(linkedList * list,int i){
     linked_node* currentNode=list->firstNode;
     while(i>0){
         currentNode=currentNode->next;
@@ -160,7 +138,7 @@ linkedList * copyList(linkedList* list){
 }
 
 int get_firt_index_at_level(linkedList * list,int start,int level){
-    linked_node* currentNode=get_node(list,start);
+    linked_node* currentNode=get_node_by_index(list,start);
     while(currentNode!=NULL){
         if(currentNode->val->depth==level){
             return start;
@@ -169,4 +147,15 @@ int get_firt_index_at_level(linkedList * list,int start,int level){
         start++;
     }
     return -1;
+}
+
+linked_node * get_node_by_value(linkedList * list,char value){
+    linked_node* currentNode=list->firstNode;
+    while(currentNode!=NULL){
+        if(currentNode->val->value==value){
+            return currentNode;
+        }
+        currentNode=currentNode->next;
+    }
+    return NULL;
 }

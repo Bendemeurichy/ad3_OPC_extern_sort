@@ -5,7 +5,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "tree.h"
+#include "tree/tree.h"
 #include "compress.h"
 #include "extract.h"
 #include "sort.h"

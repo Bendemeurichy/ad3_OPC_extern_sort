@@ -34,7 +34,7 @@ void buildPrefixList(node* current, struct node* nodeList[], char* prefix, int i
 }
 
 //hu-tucker encoding/ Garsia-Wachs/ iets makkelijker
-node *processFrequency(int frequency[]) {
+node **processFrequency(int frequency[],int nodeCount){
     //node* nodes[nodeCount];
     linkedList* nodes=NULL;
     //int nextIndex=0;
@@ -57,11 +57,31 @@ node *processFrequency(int frequency[]) {
         }
     }
 
-
     //build weighted bst
     //TODO: FIX
-    node* root= create_prefix_tree(nodes);
-    return root;
+    linkedList* list_without_newline= copyList(nodes);
+    removeNode(list_without_newline,get_node_by_value(list_without_newline,'\n')->val);
+
+    node* tree= create_prefix_tree(list_without_newline);
+
+    //just process the tree and add the prefix to the node
+    node* nodeList[nodeCount];
+    int index = 0;
+    int* nodelistIndex=(int*) malloc(sizeof (int)) ;
+    *nodelistIndex = 1;
+    char *prefix=malloc(sizeof(char)*nodeCount);
+
+    //just write every code to node and make list in other bit of code
+    buildPrefixList(tree, nodeList,prefix , index,nodelistIndex);
+    node** nodes_array=linked_list_to_array(nodes);
+    nodes_array[0]->prefix=(char*) malloc(sizeof(char));
+    nodes_array[0]->prefix[0]='\0';
+    removeList(list_without_newline);
+    removeList(nodes);
+    free(nodelistIndex);
+    free(prefix);
+    cleanupInternalNodes(tree);
+    return nodes_array;
 
 }
 
@@ -72,12 +92,12 @@ node *merge(linkedList *nodes) {
 
     while(nodes->size>1){
         int minimum=findminimum(nodes,0);
-        //printf("minimum: %d\n", get_node(nodes,minimum)->val->value);
+        //printf("minimum: %d\n", get_node_by_index(nodes,minimum)->val->value);
         int compatible=find_min_compatible(nodes,minimum);
         merge_nodes(nodes,minimum,compatible,0);
 
     }
-    return get_node(nodes,0)->val;
+    return get_node_by_index(nodes,0)->val;
 }
 
 int find_min_compatible(linkedList* nodes, int i){
@@ -89,11 +109,11 @@ int find_min_compatible(linkedList* nodes, int i){
     if(i!=0){
         int j=i-1;
         while(j>=0 && compatible==1){
-            if(get_node(nodes,j)->val->frequency<min){
-                min=get_node(nodes,j)->val->frequency;
+            if(get_node_by_index(nodes,j)->val->frequency<min){
+                min=get_node_by_index(nodes,j)->val->frequency;
                 minLeft=j;
             }
-            if(get_node(nodes,j)->compatible==1){
+            if(get_node_by_index(nodes,j)->compatible==1){
                 compatible=0;
             }
             j--;
@@ -104,11 +124,11 @@ int find_min_compatible(linkedList* nodes, int i){
     if(i!=nodes->size-1){
         int j=i+1;
         while(j<nodes->size && compatible==1){
-            if(get_node(nodes,j)->val->frequency<min){
-                min=get_node(nodes,j)->val->frequency;
+            if(get_node_by_index(nodes,j)->val->frequency<min){
+                min=get_node_by_index(nodes,j)->val->frequency;
                 minRight=j;
             }
-            if(get_node(nodes,j)->compatible==1){
+            if(get_node_by_index(nodes,j)->compatible==1){
                 compatible=0;
             }
             j++;
@@ -116,7 +136,7 @@ int find_min_compatible(linkedList* nodes, int i){
     }
     int min_index=-1;
     if(minLeft!=-1 && minRight!=-1){
-        min_index=(get_node(nodes,minLeft)->val->frequency<get_node(nodes,minRight)->val->frequency)?minLeft:minRight;
+        min_index=(get_node_by_index(nodes,minLeft)->val->frequency<get_node_by_index(nodes,minRight)->val->frequency)?minLeft:minRight;
     } else if(minLeft!=-1){
         min_index=minLeft;
     } else if(minRight!=-1){
@@ -129,7 +149,7 @@ int find_min_compatible(linkedList* nodes, int i){
 int findminimum(linkedList* nodes,int i){
     int min=i;
     for(int j=i+1;j<nodes->size;j++){
-        if(get_node(nodes,j)->val->frequency<get_node(nodes,min)->val->frequency){
+        if(get_node_by_index(nodes,j)->val->frequency<get_node_by_index(nodes,min)->val->frequency){
             min=j;
         }
     }
@@ -137,8 +157,8 @@ int findminimum(linkedList* nodes,int i){
 }
 
 void merge_nodes(linkedList* nodes,int i,int j,int depth){
-    node* left=get_node(nodes,i)->val;
-    node* right=get_node(nodes,j)->val;
+    node* left=get_node_by_index(nodes,i)->val;
+    node* right=get_node_by_index(nodes,j)->val;
     node* newNode=(node*) malloc(sizeof(node));
     newNode->value= right->value;
     newNode->frequency=left->frequency+right->frequency;
@@ -176,14 +196,14 @@ node* construct_alfabetic_tree(linkedList* nodes,int max_depth){
         construct_level(nodes,depth);
         depth--;
     }
-    return get_node(nodes,0)->val;
+    return get_node_by_index(nodes,0)->val;
 }
 
 void construct_level(linkedList* nodes, int level){
     while(get_firt_index_at_level(nodes,0,level)!=-1){
         int index1= get_firt_index_at_level(nodes,0,level);
-        node* node1= get_node(nodes,index1)->val;
-        node* node2= get_node(nodes, get_firt_index_at_level(nodes,index1+1,level))->val;
+        node* node1= get_node_by_index(nodes,index1)->val;
+        node* node2= get_node_by_index(nodes, get_firt_index_at_level(nodes,index1+1,level))->val;
         node* new_node=(node*) malloc(sizeof(node));
         new_node->value=node2->value;
         new_node->frequency=node1->frequency+node2->frequency;
@@ -205,6 +225,33 @@ node *create_prefix_tree(linkedList *nodes) {
     node* root= merge(nodes);
     int max_depth=0;
     assign_depths(root,0,&max_depth);
+    cleanupInternalNodes(root);
     node* new_root=construct_alfabetic_tree(copy,max_depth);
+    removeList(copy);
     return new_root;
+}
+
+void cleanupInternalNodes(node* nodes){
+    if(nodes->left!=NULL){
+        cleanupInternalNodes(nodes->left);
+    }
+    if(nodes->right!=NULL){
+        cleanupInternalNodes(nodes->right);
+    }
+    if(nodes->left!=NULL && nodes->right!=NULL){
+        free(nodes->prefix);
+        free(nodes);
+    }
+}
+
+node** linked_list_to_array(linkedList* nodes){
+    node** array= (node**) malloc(sizeof(node) * nodes->size);
+    linked_node* currentNode=nodes->firstNode;
+    int i=0;
+    while(currentNode!=NULL){
+        array[i]=currentNode->val;
+        currentNode=currentNode->next;
+        i++;
+    }
+    return array;
 }
