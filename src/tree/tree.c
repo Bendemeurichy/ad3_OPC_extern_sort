@@ -71,10 +71,6 @@ void printToFile(node* pNode[], int count, FILE* output) {
     }
 }
 
-int sortAlfabetically(const void *a, const void *b) {
-    node *node1 = *(node **)a, *node2 = *(node **)b;
-    return (node1->value - node2->value);
-}
 
 //TODO: sort backwards so that largest freq el is in the front, then use nodecount to acces elements with lowest freq
 //TODO: if value < other value, left, else right give parent value of left child
