@@ -42,7 +42,7 @@ int tree(char *inputFile, char *outputFile, int bufferSize){
     FILE *output=fopen(outputFile, "w");
 
     //dfs(tree, outputFile);
-    qsort(nodeList, nodeCount, sizeof(node*),sortAlfabetically);
+    //qsort(nodeList, nodeCount, sizeof(node*),sortAlfabetically);
     printToFile( nodeList, nodeCount, output);
 
     fclose(output);
