@@ -17,15 +17,17 @@ int tree(char *inputFile, char *outputFile, int bufferSize){
         return 1;
     }
 
-    char buffer[bufferSize];
+    char* buffer= (char*) malloc(bufferSize*sizeof(char));
     int frequency[127] = {0};
-    size_t bytesRead;
+    size_t bytesRead=0;
     while((bytesRead = fread(buffer, sizeof(char), bufferSize, input)) > 0){
         for(size_t i = 0; i < bytesRead; i++){
                 frequency[buffer[i]]++;
         }
     }
     fclose(input);
+    free(buffer);
+
 
     //process frequency array -> huffman encode
     int nodeCount = 0;

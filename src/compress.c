@@ -64,7 +64,7 @@ int compress(char *inputFile, char *outputFile, int bufferSize, char *prefixCodi
     fclose(prefixCoding);
 
     // parse the input file and write encoding to output file
-    char buffer[bufferSize];
+    char* buffer= (char*) malloc(bufferSize*sizeof(char));
     char byte=0;
     int bitcount=0;
     size_t bytesRead;
@@ -115,6 +115,7 @@ int compress(char *inputFile, char *outputFile, int bufferSize, char *prefixCodi
 
     }
 
+    free(buffer);
     fclose(output);
     fclose(input);
 
