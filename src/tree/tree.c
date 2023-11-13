@@ -49,6 +49,7 @@ int tree(char *inputFile, char *outputFile, int bufferSize){
 
 
     cleanupMemory(nodeList,nodeCount);
+    free(nodeList);
 
     return 0;
 }

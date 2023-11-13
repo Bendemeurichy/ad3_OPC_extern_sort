@@ -23,6 +23,7 @@ int main(int argc, char *argv[]) {
     argc--;
     argv++;
 
+
     //getopts for options
     while((opt = getopt(argc, argv, "i:o:m:t:")) != -1) {
         switch(opt) {
@@ -37,13 +38,14 @@ int main(int argc, char *argv[]) {
                 break;
             case 't':
                 prefixCodingFile = optarg;
+                break;
             default:
                 break;
         }
     }
 
     //errorhandling
-    if(!strcmp(command,"compress") && prefixCodingFile !=NULL){
+    if(strcmp(command, "compress") != 0 && prefixCodingFile != NULL){
         printf("Error: option -t is only allowed for compress command");
         return -1;
     }

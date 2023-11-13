@@ -93,6 +93,7 @@ void removeNode(linkedList *list, node* value){
         list->lastNode = prevNode;
     }
 
+    free(currentNode);
     list->size--;
 }
 
