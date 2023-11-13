@@ -1,7 +1,7 @@
 //
 // Created by bendm on 21/10/23.
 //
-#include <unistd.h>
+#include <getopt.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
