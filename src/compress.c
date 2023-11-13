@@ -65,7 +65,7 @@ int compress(char *inputFile, char *outputFile, int bufferSize, char *prefixCodi
 
     // parse the input file and write encoding to output file
     char buffer[bufferSize];
-    u_int8_t byte=0;
+    char byte=0;
     int bitcount=0;
     size_t bytesRead;
     long lineLength = 0;
@@ -76,12 +76,12 @@ int compress(char *inputFile, char *outputFile, int bufferSize, char *prefixCodi
             if(buffer[i]=='\n'){
                 if(bitcount != 0){
                     byte = byte << (7 - bitcount);
-                    fwrite(&byte, sizeof(u_int8_t), 1, output);
+                    fwrite(&byte, sizeof(char), 1, output);
                     byte = 0;
                 }
                 //write line length to file with first 19bits the size in bytes and the 3 bits after the remaining bits in the next byte
                 //write in front of line
-                u_int32_t first3BytesOfLine = (lineLength& 0x7FFFF) <<3;
+                int first3BytesOfLine = (lineLength& 0x7FFFF) <<3;
                 first3BytesOfLine |= (bitcount & 0x7);
                 long position = lineLength + (bitcount == 0 ? 0 : 1);
 
@@ -104,7 +104,7 @@ int compress(char *inputFile, char *outputFile, int bufferSize, char *prefixCodi
                     }
                     bitcount++;
                     if (bitcount == 8) {
-                        fwrite(&byte, sizeof(u_int8_t), 1, output);
+                        fwrite(&byte, sizeof(char), 1, output);
                         byte = 0;
                         bitcount = 0;
                         lineLength++;
