@@ -63,16 +63,22 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
+    int temp =0;
 
     //call for the right function
     if(strcmp(command,"tree")==0){
         tree(inputFile, outputFile, bufferSize);
     } else if(strcmp(command,"compress")==0){
         if(prefixCodingFile == NULL){
-            printf("Error: option -t is required");
-            return -1;
+
+            tree(inputFile, "tmp.txt",bufferSize);
+            prefixCodingFile = "tmp.txt";
+            temp = 1;
         }
         compress(inputFile, outputFile, bufferSize, prefixCodingFile);
+        if(temp==1){
+            remove("tmp.txt");
+        }
     } else if (strcmp(command,"extract")==0){
         extract(inputFile, outputFile, bufferSize);
     } else if(strcmp(command,"sort")==0){

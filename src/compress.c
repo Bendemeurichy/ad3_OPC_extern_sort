@@ -66,10 +66,21 @@ int compress(char *inputFile, char *outputFile, int bufferSize, char *prefixCodi
     // parse the input file and write encoding to output file
     char* buffer= (char*) malloc(bufferSize*sizeof(char));
     char byte=0;
-    int bitcount=0;
+    char bitcount=0;
     size_t bytesRead;
     long lineLength = 0;
+    
+    //make header by just assigning 4 bytes per prefix
+    char charAmount = 0;
+    char* headerBuffer = (char*) malloc(6*127*sizeof(char));
+    for(int i = 0;i<127;i++){
+        if(prefixes[i] != NULL){
+            charAmount++;
+        }
+    }
 
+    headerBuffer[0] = charAmount;
+    //write header to file
 
     while((bytesRead = fread(buffer, sizeof(char), bufferSize, input)) > 0){
         for(size_t i = 0; i < bytesRead; i++){
@@ -80,7 +91,7 @@ int compress(char *inputFile, char *outputFile, int bufferSize, char *prefixCodi
                     byte = 0;
                 }
                 //write line length to file with first 19bits the size in bytes and the 3 bits after the remaining bits in the next byte
-                //write in front of line
+                //write in front of line 22 bits of 24 actually used
                 int first3BytesOfLine = (lineLength& 0x7FFFF) <<3;
                 first3BytesOfLine |= (bitcount & 0x7);
                 long position = lineLength + (bitcount == 0 ? 0 : 1);
@@ -98,7 +109,7 @@ int compress(char *inputFile, char *outputFile, int bufferSize, char *prefixCodi
             if(prefix != NULL) {
                 for (size_t j = 0; j < strlen(prefix); j++) {
                     if (prefix[j] == '1') {
-                        byte |= 1 << (7 - bitcount);
+                        byte |= (1 << (7 - bitcount));
                     } else {
                         byte &= ~(1 << (7 - bitcount));
                     }
