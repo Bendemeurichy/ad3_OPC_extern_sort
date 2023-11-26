@@ -165,6 +165,7 @@ Je programma moet bestanden kunnen comprimeren en sorteren die voldoen aan de vo
 - Het gemiddelde van de lengtes van de lijnen in een bestand zal niet kleiner zijn dan 8 karakters.
 - De lijnen worden gesorteerd volgens de lexicografische volgorde van de karakters (geïnterpreteerd als `unsigned char`), je moet dus geen rekening houden met [taal- en cultuurafhankelijke sorteervolgorde](http://unicode.org/reports/tr10/#Introduction).
 - De frequenties van karakters in een bestand zullen er nooit voor zorgen dat een prefix-code voor één karakter meer dan 64 bits zal nodig hebben voor de optimale orde-bewarende prefix-codering.
+- Een gecodeerde lijn zal ook nooit langer zijn dan 45354 bytes (de langst mogelijke niet-gecodeerde lijn). Lijnen zullen ook meestal veel korter te coderen zijn dan de originele lijn.
 
 Je programma mag natuurlijk ook bestanden kunnen afhandelen die niet aan deze specificaties voldoen, maar dat hoeft niet.
 
@@ -182,6 +183,7 @@ Je mag hiervoor gebruik maken van de meegeleverde `test.h`-header van het framew
 - Je mag niet uitschrijven naar `stderr`, tenzij er iets fout loopt (bv. een ongeldige optie) of als dit expliciet wordt meegegeven als argument (bv. `-v` om verbose modus in te schakelen).
 - Je programma moet single threaded zijn en mag dus niet forken.
 - De buffer die je gebruikt om ingelezen strings in op te slaan mag niet groter zijn dan de grootte die meegegeven werd met de `-m` optie.
+- De kleinste buffergrootte die je zal krijgen is `33554432` (32 MiB), je moet hiermee bestanden kunnen comprimeren tot 10 GiB groot.
 
 We voorzien 50% extra geheugen voor je programma om overhead op te vangen. Wanneer we een buffergrootte van 100MiB opgeven, mag het totaal van jouw programma dus niet meer dan 150MiB geheugen gebruiken.
 We zullen je geheugengebruik beperken van de CGroup-functionaliteit met `systemd-run`:
