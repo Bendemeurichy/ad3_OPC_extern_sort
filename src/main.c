@@ -63,6 +63,7 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
+    //check if temp has to be deleted after compress
     int temp =0;
 
     //call for the right function
