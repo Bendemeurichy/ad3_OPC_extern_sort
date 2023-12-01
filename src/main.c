@@ -72,13 +72,13 @@ int main(int argc, char *argv[]) {
     } else if(strcmp(command,"compress")==0){
         if(prefixCodingFile == NULL){
 
-            tree(inputFile, "tmp.txt",bufferSize);
-            prefixCodingFile = "tmp.txt";
+            tree(inputFile, "./tmp.txt",bufferSize);
+            prefixCodingFile = "./tmp.txt";
             temp = 1;
         }
         compress(inputFile, outputFile, bufferSize, prefixCodingFile);
         if(temp==1){
-            remove("tmp.txt");
+            remove("./tmp.txt");
         }
     } else if (strcmp(command,"extract")==0){
         extract(inputFile, outputFile, bufferSize);
