@@ -115,8 +115,8 @@ int compress(char *inputFile, char *outputFile, int bufferSize, char *prefixCodi
 
     byte=0;
     bitcount=0;
-    char* linebuffer = (char*) malloc(45357*sizeof(char));
-    int linebufferIndex = 3;
+    unsigned char* linebuffer = (char*) malloc(45357*sizeof(char));
+    unsigned int linebufferIndex = 3;
     //read input file and write to output file
     while((bytesRead = fread(buffer, sizeof(char), bufferSize, input)) > 0){
         for(size_t i = 0; i < bytesRead; i++){
@@ -130,7 +130,7 @@ int compress(char *inputFile, char *outputFile, int bufferSize, char *prefixCodi
                 }
                 //write line length to file with first 19bits the size in bytes and the 3 bits after the remaining bits in the next byte
                 //write in front of line 22 bits of 24 actually used
-                int first3BytesOfLine = (lineLength& 0x7FFFF) <<3;
+                unsigned int first3BytesOfLine = (lineLength& 0x7FFFF) <<3;
                 first3BytesOfLine |= (bitcount & 0x7);
 
 

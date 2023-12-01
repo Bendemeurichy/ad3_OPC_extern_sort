@@ -11,5 +11,6 @@
 
 int extract(char *inputFile, char *outputFile, int bufferSize);
 node* readHeader(FILE *input);
+int freeTree(node* root);
 
 #endif //AD3_PROJECT_EXTRACT_H

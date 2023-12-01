@@ -21,81 +21,95 @@ int extract(char *inputFile, char *outputFile, int bufferSize){
         return 1;
     }
 
-    char* buffer = (char*) malloc(sizeof(char) * bufferSize);
-    size_t read = 0;
-    char * linebuffer = (char*) malloc(sizeof(char) * bufferSize);
-    int linebufferindex = 0;
-    int linesize = 0;
-    char currentByte =0;
-    char lastbit = 0;
-    int currentByteIndex = 0;
-    node* currentNode = root;
+    //longest possible line is 45354+3 bytes
+    char* buffer = (char*) malloc(sizeof(char)*45354);
+    char * linebuffer = (char*) malloc(sizeof(char) * 45354);
 
-    while((read = fread(buffer, sizeof(char), bufferSize, input)) > 0){
-        for(size_t i=0;i<read;i++){
-            if(currentByteIndex == 0){
-                linesize = buffer[i]<<16 | buffer[i+1]<<8 | buffer[i+2];
-                //last 3 bits of linesize is lastbit
-                lastbit = linesize & 7;
-                linesize = linesize >> 3;
-                i+=3;
-            }
-            if(currentByteIndex == (linesize-1)){
-                //last byte
-                currentByte = buffer[i];
-                int bitIndex = 7;
+    char* linesizeBuffer = (char*) malloc(sizeof(char)*3);
+    unsigned char lastbit;
+    char inFile =1;
 
-                while(bitIndex>= (8-lastbit)){
-                    if((currentByte>>bitIndex) & 1){
-                        currentNode = currentNode->right;
+    while(inFile ==1 ){
+
+        if(fread(linesizeBuffer,sizeof(char),3,input)<3){
+            //end of file
+            inFile=0;
+        }else{
+            //succes
+            unsigned char linesize=0;
+            linesize |= linesizeBuffer[0];
+            linesize <<= 8;
+            linesize |= linesizeBuffer[1];
+            linesize <<= 8;
+            linesize |= linesizeBuffer[2];
+            lastbit=(linesize&0b111);
+            linesize>>=3;
+
+            //read all bytes of line
+            fread(buffer,sizeof (char),linesize,input);
+            //read all normal characters out of normal bytes
+            node* current = root;
+            int linebufferIndex = 0;
+            for(int i=0; i<linesize-1;i++){
+                char currentbyte = buffer[i];
+                for(int j=7;j>=0;j--){
+                    if(currentbyte>>j & 1){
+                        current = current->right;
                     }else{
-                        currentNode = currentNode->left;
+                        current = current->left;
                     }
-                    if(currentNode->value != 0){
-                        linebuffer[linebufferindex] = currentNode->value;
-                        linebufferindex++;
-                        currentNode = root;
+                    if(current->value != 0){
+                        linebuffer[linebufferIndex] = current->value;
+                        linebufferIndex++;
+                        current = root;
                     }
-                    bitIndex--;
                 }
-
-                linesize = 0;
-                currentByteIndex = 0;
-                lastbit = 0;
-                fwrite(linebuffer, sizeof(char),  linebufferindex, output);
-                fwrite("\n", sizeof(char), 1, output);
-                currentNode = root;
-                for(int j=0;j<linebufferindex;j++){
-                    linebuffer[j] = 0;
-                }
-                linebufferindex = 0;
-            } else {
-            currentByte=buffer[i];
-
-            int bitIndex = 7;
-            while(bitIndex>= 0){
-                if((currentByte>>bitIndex) & 1){
-                    currentNode = currentNode->right;
+            }
+            //read last byte with lastbit
+            char currentbyte = buffer[linesize-1];
+            if(lastbit == 0){
+                lastbit = 8;
+            }
+            for(int j=7;j>=8-lastbit;j--){
+                if(currentbyte>>j & 1){
+                    current = current->right;
                 }else{
-                    currentNode = currentNode->left;
+                    current = current->left;
                 }
-                if(currentNode->value != 0){
-                    linebuffer[linebufferindex] = currentNode->value;
-                    linebufferindex++;
-                    currentNode = root;
+                if(current->value != 0){
+                    linebuffer[linebufferIndex] = current->value;
+                    linebufferIndex++;
+                    current = root;
                 }
-                bitIndex--;
             }
-                currentByteIndex++;
+            fwrite(linebuffer, sizeof(char), linebufferIndex, output);
+            fwrite("\n", sizeof(char), 1, output);
+            for(int j = 0; j < linebufferIndex; j++){
+                linebuffer[j] = 0;
             }
-
+            for(int j = 0; j<linesize; j++){
+                buffer[j] = 0;
+            }
         }
     }
 
+    free(linesizeBuffer);
     fclose(input);
     fclose(output);
     free(buffer);
     free(linebuffer);
+    freeTree(root);
+    return 0;
+}
+
+int freeTree(node *root) {
+    if(root->left != NULL){
+        freeTree(root->left);
+    }
+    if(root->right != NULL){
+        freeTree(root->right);
+    }
+    free(root);
     return 0;
 }
 
