@@ -6,9 +6,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
-void printToFile(node *pNode[], int count, FILE *output);
-
 //change huffman to optimal weighted binary tree
 int tree(char *inputFile, char *outputFile, int bufferSize){
     FILE *input = fopen(inputFile, "r");

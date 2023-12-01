@@ -7,7 +7,7 @@
 #include "prefix_util.h"
 
 int tree(char *inputFile, char *outputFile, int bufferSize);
-int sortAlfabetically(const void *a, const void *b);
 void cleanupMemory(node *pNode[],int count);
+void printToFile(node *pNode[], int count, FILE *output);
 
 #endif //AD3_PROJECT_TREE_H
