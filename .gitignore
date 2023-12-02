@@ -76,3 +76,5 @@ fabric.properties
 ### Data ###
 data/*
 /vgcore.*
+
+test/docker/

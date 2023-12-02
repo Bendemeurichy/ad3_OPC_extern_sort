@@ -27,43 +27,61 @@ int compress(char *inputFile, char *outputFile, int bufferSize, char *prefixCodi
         return 1;
     }
 
+
+
     // Read prefix coding file
-    char* prefixes[127]={NULL};
+//    char* prefixes[127]={NULL};
+//
+//    char *line = NULL;
+//    size_t len = 0;
+//    // Read the file line by line
+//    while (getline(&line, &len, prefixCoding) != -1) {
+//        char *token = strtok(line, " "); // Using space as the delimiter
+//
+//        // get the character
+//        int value = atoi(token);
+//
+//        // Skip the second value
+//        strtok(NULL, " ");
+//        token = strtok(NULL, " ");
+//
+//        // Process the prefix (third value)
+//        char bitstring[64]; // the prefix will never be longer than 64 bits (opgave)
+//        if (token != NULL) {
+//            // Remove the  newline character on each line
+//            size_t prefixlength = strlen(token);
+//            if (prefixlength > 0 && token[prefixlength - 1] == '\n') {
+//                token[prefixlength - 1] = '\0'; // Remove the newline
+//            }
+//            strcpy(bitstring, token);
+//        }
+//        if (strcmp(bitstring,"")!=0) {
+//            prefixes[value] = strdup(bitstring);
+//        }
+//    }
 
-    char *line = NULL;
-    size_t len = 0;
-    // Read the file line by line
-    while (getline(&line, &len, prefixCoding) != -1) {
-        char *token = strtok(line, " "); // Using space as the delimiter
-
-        // get the character
-        int value = atoi(token);
-
-        // Skip the second value
-        strtok(NULL, " ");
-        token = strtok(NULL, " ");
-
-        // Process the prefix (third value)
-        char bitstring[64]; // the prefix will never be longer than 64 bits (opgave)
-        if (token != NULL) {
-            // Remove the  newline character on each line
-            size_t prefixlength = strlen(token);
-            if (prefixlength > 0 && token[prefixlength - 1] == '\n') {
-                token[prefixlength - 1] = '\0'; // Remove the newline
-            }
-            strcpy(bitstring, token);
-        }
-        if (strcmp(bitstring,"")!=0) {
-            prefixes[value] = strdup(bitstring);
-        }
+    int ch;
+    char prefixes[128][65];
+    char tempBuffer[256];
+    if (fgets(tempBuffer, sizeof(tempBuffer), prefixCoding) == NULL) {
+        // Handle error or end of file
+    }
+    // 64 bit + terminator
+    memset(prefixes, 0, sizeof(prefixes));
+    char code[65];
+    while (fscanf(prefixCoding, "%u %*d %s", &ch, code) == 2) {
+        strncpy(prefixes[ch], code, 64);
+        prefixes[ch][64] = '\0';
     }
 
-    free(line);
+
+    //free(line);
 
     fclose(prefixCoding);
 
     // parse the input file and write encoding to output file
     char* buffer= (char*) malloc(bufferSize*sizeof(char));
+
     char byte=0;
     char bitcount=0;
     size_t bytesRead;
@@ -72,23 +90,32 @@ int compress(char *inputFile, char *outputFile, int bufferSize, char *prefixCodi
     //make header by just assigning 4 bytes max per prefix
     char charAmount = 0;
     char* headerBuffer = (char*) malloc(((10*127)+2)*sizeof(char));
+
     int headerIndex = 2;
 
     for (char i = 0; i < 127; i++) {
-        if (prefixes[i] != NULL) {
+        if (prefixes[i][0] != 0) {
             headerBuffer[headerIndex] = i;
+
             headerIndex++;
-            headerBuffer[headerIndex] = strlen(prefixes[i]);
-            printf("prefix %d %d %s\n", i, strlen(prefixes[i]), prefixes[i]);
+            //printf("headerindex %d\n", headerIndex);
+            //printf("prefix %s\n", prefixes[i]);
+
+            //probleem is prefixes[i]
+            headerBuffer[headerIndex] = (char) strlen(prefixes[i]);
+            //printf("prefix %d %d %s\n", i, strlen(prefixes[i]), prefixes[i]);
             headerIndex++;
             charAmount++;
+
             for (int j = 0; j < strlen(prefixes[i]); j++) {
+
                 if (prefixes[i][j] == '1') {
                     byte |= (1 << (7 - bitcount));
                 } else {
                     byte &= ~(1 << (7 - bitcount));
                 }
                 bitcount++;
+
                 if (bitcount == 8) {
                     headerBuffer[headerIndex] = byte;
                     headerIndex++;
@@ -112,6 +139,8 @@ int compress(char *inputFile, char *outputFile, int bufferSize, char *prefixCodi
     fwrite(headerBuffer, sizeof(char), headerIndex, output);
     free(headerBuffer);
     //works till here, header is written to file
+
+
 
     byte=0;
     bitcount=0;

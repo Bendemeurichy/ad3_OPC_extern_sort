@@ -1,0 +1,61 @@
+    // Read prefix coding file
+//    char* prefixes[127]={NULL};
+//
+//    char *line = NULL;
+//    size_t len = 0;
+//    // Read the file line by line
+//    while (getline(&line, &len, prefixCoding) != -1) {
+//        char *token = strtok(line, " "); // Using space as the delimiter
+//
+//        // get the character
+//        int value = atoi(token);
+//
+//        // Skip the second value
+//        strtok(NULL, " ");
+//        token = strtok(NULL, " ");
+//
+//        // Process the prefix (third value)
+//        char bitstring[64]; // the prefix will never be longer than 64 bits (opgave)
+//        if (token != NULL) {
+//            // Remove the  newline character on each line
+//            size_t prefixlength = strlen(token);
+//            if (prefixlength > 0 && token[prefixlength - 1] == '\n') {
+//                token[prefixlength - 1] = '\0'; // Remove the newline
+//            }
+//            strcpy(bitstring, token);
+//        }
+//        if (strcmp(bitstring,"")!=0) {
+//            prefixes[value] = strdup(bitstring);
+//        }
+//    }
+
+
+    free(line);
+
+    fclose(prefixCoding);
+
+    // parse the input file and write encoding to output file
+    char* buffer= (char*) malloc(bufferSize*sizeof(char));
+
+    char byte=0;
+    char bitcount=0;
+    size_t bytesRead;
+    long lineLength = 0;
+    
+    //make header by just assigning 4 bytes max per prefix
+    char charAmount = 0;
+    char* headerBuffer = (char*) malloc(((10*127)+2)*sizeof(char));
+
+    int headerIndex = 2;
+
+    for (char i = 0; i < 127; i++) {
+        if (prefixes[i][0] != 0) {
+            headerBuffer[headerIndex] = i;
+            
+            headerIndex++;
+            //printf("headerindex %d\n", headerIndex);
+            //printf("prefix %s\n", prefixes[i]);
+            
+            //probleem is prefixes[i]
+            headerBuffer[headerIndex] = (char) strlen(prefixes[i]);
+            exit(1);
