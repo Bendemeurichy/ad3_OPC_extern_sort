@@ -11,10 +11,12 @@ add_executable(AD3_project
         src/extract.h
         src/compress.c
         src/compress.h
-        src/sort.c
-        src/sort.h
+        src/sort/sort.c
+        src/sort/sort.h
         src/tree/prefix_util.c
         src/tree/prefix_util.h
         src/tree/linked_list.c
         src/tree/linked_list.h
+        src/sort/sorting_linked_list.c
+        src/sort/sorting_linked_list.h
 )

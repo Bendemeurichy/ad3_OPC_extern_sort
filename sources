@@ -5,8 +5,10 @@ extract.c
 extract.h
 compress.c
 compress.h
-sort.c
-sort.h
+sort/sort.c
+sort/sort.h
+sort/sorting_linked_list.c
+sort/sorting_linked_list.h
 tree/prefix_util.c
 tree/prefix_util.h
 tree/linked_list.c

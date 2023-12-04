@@ -15,7 +15,7 @@ int extract(char *inputFile, char *outputFile, int bufferSize){
 
     node *root = readHeader(input);
 
-    FILE *output = fopen(outputFile, "w");
+    FILE *output = fopen(outputFile, "w+");
     if(output == NULL){
         printf("Error opening file %s\n", outputFile);
         return 1;

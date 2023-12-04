@@ -8,7 +8,7 @@
 #include "tree/tree.h"
 #include "compress.h"
 #include "extract.h"
-#include "sort.h"
+#include "sort/sort.h"
 
 int main(int argc, char *argv[]) {
     //possible arguments
