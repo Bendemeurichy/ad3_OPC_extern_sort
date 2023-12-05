@@ -122,7 +122,7 @@ int blockSort(FILE *input, int bufferSize){
             fread(lines[bufferIndex]+3, sizeof(uint8_t), linesize, input);
 
             bufferIndex++;
-            uint8_t **temp = (uint8_t **) realloc(lines, sizeof(uint8_t *) * (bufferIndex));
+            uint8_t **temp = realloc(lines, sizeof(uint8_t *) * (bufferIndex+1));
             if (temp == NULL) {
                 printf("Error reallocating memory\n");
                 freeLines(lines, bufferIndex);
@@ -130,7 +130,7 @@ int blockSort(FILE *input, int bufferSize){
             }else {
                 lines = temp;
             }
-
+            //free(temp);
             buffersizeUsed += linesize + 3;
 
         } else {
@@ -154,7 +154,7 @@ int blockSort(FILE *input, int bufferSize){
             freeLines(lines, bufferIndex);
             lines = (uint8_t **) malloc(sizeof(uint8_t *));
 
-            lines[bufferIndex] = (uint8_t *) malloc(sizeof(uint8_t) * linesize + 3);
+            lines[bufferIndex] = (uint8_t *) malloc(sizeof(uint8_t) * (linesize + 3));
             if(lines[bufferIndex] == NULL){
                 printf("Error allocating memory\n");
                 return 1;
@@ -165,7 +165,7 @@ int blockSort(FILE *input, int bufferSize){
             lines[bufferIndex][2] = linesizeBuffer[2];
             bufferIndex++;
 
-            uint8_t **temp_lines = (uint8_t **) realloc(lines, sizeof(uint8_t *) * (bufferIndex));
+            uint8_t **temp_lines = realloc(lines, sizeof(uint8_t *) * (bufferIndex+1));
             if (temp_lines == NULL) {
                 printf("Error reallocating memory\n");
                 freeLines(lines, bufferIndex);
@@ -208,10 +208,14 @@ int blockSort(FILE *input, int bufferSize){
 int compareLines(const void *a, const void *b){
     uint8_t *pa = *(uint8_t **) a;
     uint8_t *pb = *(uint8_t **) b;
-    uint16_t sizea = pa[1] << 8;
+    uint32_t sizea = pa[0] << 8;
+    sizea |= pa[1];
+    sizea<<=8;
     sizea |= pa[2];
     sizea >>= 3;
-    uint16_t sizeb = pb[1] << 8;
+    uint32_t sizeb = pb[0] << 8;
+    sizeb |= pb[1];
+    sizeb<<=8;
     sizeb |= pb[2];
     sizeb >>= 3;
 
