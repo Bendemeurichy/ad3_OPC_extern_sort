@@ -16,6 +16,7 @@ temp_file_list * create_temp_list(){
 temp_file* create_temp_file(char* value,FILE* file){
     temp_file * newNode=(temp_file *) malloc(sizeof (temp_file));
     newNode->file=file;
+    newNode->name=(char*) malloc(sizeof(char)*(strlen(value)+1));
     strcpy(newNode->name,value);
     newNode->next=NULL;
     return newNode;

@@ -7,7 +7,7 @@
 #include <stdio.h>
 
 typedef struct temp_file{
-    char name[100];
+    char* name;
     FILE* file;
 
     struct temp_file *next;

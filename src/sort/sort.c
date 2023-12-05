@@ -93,7 +93,7 @@ int freeLines(uint8_t **lines, long size) {
 int blockSort(FILE *input, int bufferSize){
     int tempcount = 0;
     uint8_t linesizeBuffer[3];
-    uint16_t linesize=0;
+    uint32_t linesize=0;
     uint8_t **lines= (uint8_t **) malloc(sizeof(uint8_t *));
     if(lines == NULL){
         printf("Error allocating memory\n");
@@ -144,8 +144,13 @@ int blockSort(FILE *input, int bufferSize){
                 return 1;
             }
             for (int i = 0; i < bufferIndex; i++) {
+                int writelinesize = lines[i][0] << 8;
+                writelinesize |= lines[i][1];
+                writelinesize <<= 8;
+                writelinesize |= lines[i][2];
+                writelinesize >>= 3;
 
-                fwrite(lines[i], sizeof(uint8_t), (linesize>>3)+2, temp);
+                fwrite(lines[i], sizeof(uint8_t), (writelinesize+3), temp);
             }
             fclose(temp);
             bufferIndex = 0;
@@ -200,7 +205,7 @@ int blockSort(FILE *input, int bufferSize){
         buffersizeUsed = 0;
     }
     freeLines(lines, bufferIndex);
-    return tempcount;
+    return tempcount+1;
 }
 
 
@@ -225,7 +230,7 @@ int compareLines(const void *a, const void *b){
 int mergeFiles(int tempCount,int bufferSize){
     int tempfiles = 0;
     int tempfilesOneStep = bufferSize/MAXLINELENGTH;
-    tempfiles = tempCount/tempfilesOneStep;
+    tempfiles = (tempCount+tempfilesOneStep)/tempfilesOneStep;
     for(int i=0;i<tempfiles;i++){
         int endCondition = 0;
         if(i == tempfiles-1){
@@ -238,8 +243,8 @@ int mergeFiles(int tempCount,int bufferSize){
 
         for(int j=i*tempfilesOneStep;j<(i*tempfilesOneStep)+endCondition;j++) {
             char tempname[20];
-            snprintf(tempname, 20, "temp%d.txt", tempfiles);
-            FILE *temp = fopen(tempname, "rb");
+            snprintf(tempname, 20, "temp%d.txt", j);
+            FILE *temp = fopen(tempname, "r+b");
             if (temp == NULL) {
                 printf("Error opening temp file\n");
                 return 1;
@@ -248,7 +253,7 @@ int mergeFiles(int tempCount,int bufferSize){
         }
 
         char largerTempName[20];
-        snprintf(largerTempName,20,"temp%d.txt", i);
+        snprintf(largerTempName,20,"largetemp%d.txt", i);
         FILE *largerTemp = fopen(largerTempName, "wb");
         if(largerTemp == NULL){
             printf("Error opening temp file\n");
@@ -262,8 +267,11 @@ int mergeFiles(int tempCount,int bufferSize){
             while(current->next!=NULL){
                 uint8_t linesizeBuffer[3];
                 uint16_t linesize=0;
-                if(fread(linesizeBuffer, sizeof(uint8_t), 3, current->file)<3){
+                size_t bytesRead = fread(linesizeBuffer, sizeof(uint8_t), 3, current->file);
+                if(bytesRead < 3){
+                    temp_file * next = current->next;
                     remove_temp_file(temp_list, current->name);
+                    current = next;
                 } else {
                     linesize |= linesizeBuffer[1];
                     linesize <<= 8;
@@ -290,6 +298,7 @@ int mergeFiles(int tempCount,int bufferSize){
 
 
         }
+
         remove_temp_file_list(temp_list);
 
         char tempname[20];
