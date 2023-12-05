@@ -23,10 +23,11 @@ int sort(char *inputFile, char *outputFile, int bufferSize) {
     }
     //write header to output file and skip it for sorting
     uint16_t headersize = 0;
-    uint8_t header[10];
+
     fread(&headersize, sizeof(uint16_t), 1, input);
     fwrite(&headersize, sizeof(uint16_t), 1, output);
     while(headersize > 0){
+        uint8_t header[10];
         uint8_t token;
         fread(&token, sizeof(uint8_t), 1, input);
         header[0] = token;
@@ -94,6 +95,10 @@ int blockSort(FILE *input, int bufferSize){
     uint8_t linesizeBuffer[3];
     uint16_t linesize=0;
     uint8_t **lines= (uint8_t **) malloc(sizeof(uint8_t *));
+    if(lines == NULL){
+        printf("Error allocating memory\n");
+        return 1;
+    }
     long bufferIndex = 0;
     long buffersizeUsed = 0;
     //lastbit is not necessary for this function but we need to write it to the output file for extraction so it goes in the linebuffer
@@ -105,7 +110,12 @@ int blockSort(FILE *input, int bufferSize){
 
         if ((buffersizeUsed + linesize + 3) < bufferSize) {
             //add line to buffer
-            lines[bufferIndex] = (uint8_t *) malloc(sizeof(uint8_t) * linesize + 3);
+            lines[bufferIndex] = (uint8_t *) malloc(sizeof(uint8_t) * (linesize + 3));
+            if(lines[bufferIndex] == NULL){
+                printf("Error allocating memory\n");
+                return 1;
+            }
+
             lines[bufferIndex][0] = linesizeBuffer[0];
             lines[bufferIndex][1] = linesizeBuffer[1];
             lines[bufferIndex][2] = linesizeBuffer[2];
@@ -115,11 +125,10 @@ int blockSort(FILE *input, int bufferSize){
             uint8_t **temp = (uint8_t **) realloc(lines, sizeof(uint8_t *) * (bufferIndex));
             if (temp == NULL) {
                 printf("Error reallocating memory\n");
-                free(lines);
+                freeLines(lines, bufferIndex);
                 return 1;
             }else {
                 lines = temp;
-                free(temp);
             }
 
             buffersizeUsed += linesize + 3;
@@ -127,8 +136,8 @@ int blockSort(FILE *input, int bufferSize){
         } else {
             //sort and write buffer to temp file
             qsort(lines, bufferIndex, sizeof(uint8_t *), compareLines);
-            char tempname[100];
-            snprintf(tempname,100,"temp%d.txt", tempcount);
+            char tempname[20];
+            snprintf(tempname,20,"temp%d.txt", tempcount);
             FILE *temp = fopen(tempname, "wb");
             if(temp == NULL){
                 printf("Error opening temp file\n");
@@ -146,6 +155,10 @@ int blockSort(FILE *input, int bufferSize){
             lines = (uint8_t **) malloc(sizeof(uint8_t *));
 
             lines[bufferIndex] = (uint8_t *) malloc(sizeof(uint8_t) * linesize + 3);
+            if(lines[bufferIndex] == NULL){
+                printf("Error allocating memory\n");
+                return 1;
+            }
             fread(lines[bufferIndex]+3, sizeof(uint8_t), linesize, input);
             lines[bufferIndex][0] = linesizeBuffer[0];
             lines[bufferIndex][1] = linesizeBuffer[1];
@@ -155,11 +168,10 @@ int blockSort(FILE *input, int bufferSize){
             uint8_t **temp_lines = (uint8_t **) realloc(lines, sizeof(uint8_t *) * (bufferIndex));
             if (temp_lines == NULL) {
                 printf("Error reallocating memory\n");
-                free(lines);
+                freeLines(lines, bufferIndex);
                 return 1;
             }else {
                 lines = temp_lines;
-                free(temp_lines);
             }
             buffersizeUsed += linesize + 3;
         }
@@ -172,8 +184,8 @@ int blockSort(FILE *input, int bufferSize){
     //write last buffer to temp file
     if(bufferIndex >0){
         qsort(lines, bufferIndex, sizeof(uint8_t *), compareLines);
-        char tempname[100];
-        snprintf(tempname,100,"temp%d.txt", tempcount);
+        char tempname[20];
+        snprintf(tempname,20,"temp%d.txt", tempcount);
         FILE *temp = fopen(tempname, "wb");
         if(temp == NULL){
             printf("Error opening temp file\n");
@@ -221,8 +233,8 @@ int mergeFiles(int tempCount,int bufferSize){
         temp_file_list * temp_list = create_temp_list();
 
         for(int j=i*tempfilesOneStep;j<(i*tempfilesOneStep)+endCondition;j++) {
-            char tempname[100];
-            snprintf(tempname, 100, "temp%d.txt", tempfiles);
+            char tempname[20];
+            snprintf(tempname, 20, "temp%d.txt", tempfiles);
             FILE *temp = fopen(tempname, "rb");
             if (temp == NULL) {
                 printf("Error opening temp file\n");
@@ -231,8 +243,8 @@ int mergeFiles(int tempCount,int bufferSize){
             add_temp_file(temp_list, tempname, temp);
         }
 
-        char largerTempName[100];
-        snprintf(largerTempName,100,"temp%d.txt", i);
+        char largerTempName[20];
+        snprintf(largerTempName,20,"temp%d.txt", i);
         FILE *largerTemp = fopen(largerTempName, "wb");
         if(largerTemp == NULL){
             printf("Error opening temp file\n");
@@ -276,8 +288,8 @@ int mergeFiles(int tempCount,int bufferSize){
         }
         remove_temp_file_list(temp_list);
 
-        char tempname[100];
-        snprintf(tempname,100,"temp%d.txt", i);
+        char tempname[20];
+        snprintf(tempname,20,"temp%d.txt", i);
         fclose(largerTemp);
         rename(largerTempName, tempname);
 
