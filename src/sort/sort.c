@@ -103,6 +103,7 @@ int blockSort(FILE *input, int bufferSize){
     long buffersizeUsed = 0;
     //lastbit is not necessary for this function but we need to write it to the output file for extraction so it goes in the linebuffer
     while (fread(linesizeBuffer, sizeof(uint8_t), 3, input) == 3) {
+        linesize = linesizeBuffer[0] << 8;
         linesize |= linesizeBuffer[1];
         linesize <<= 8;
         linesize |= linesizeBuffer[2];
@@ -153,10 +154,11 @@ int blockSort(FILE *input, int bufferSize){
                 fwrite(lines[i], sizeof(uint8_t), (writelinesize+3), temp);
             }
             fclose(temp);
-            bufferIndex = 0;
+
             buffersizeUsed = 0;
             tempcount++;
             freeLines(lines, bufferIndex);
+            bufferIndex = 0;
             lines = (uint8_t **) malloc(sizeof(uint8_t *));
 
             lines[bufferIndex] = (uint8_t *) malloc(sizeof(uint8_t) * (linesize + 3));
@@ -245,6 +247,7 @@ int mergeFiles(int tempCount,int bufferSize){
     tempfilesOneStep =5;
     tempfiles = (tempCount+tempfilesOneStep)/tempfilesOneStep;
     tempfiles = 1;
+    uint8_t ** lines;
     for(int i=0;i<tempfiles;i++){
         int endCondition = 0;
         if(i == tempfiles-1){
@@ -278,7 +281,11 @@ int mergeFiles(int tempCount,int bufferSize){
         }
 
         int bufferIndex = 0;
-        uint8_t ** lines =(uint8_t **) malloc(sizeof(uint8_t *)*temp_list->size);
+         lines=(uint8_t **) malloc(sizeof(uint8_t *)*temp_list->size);
+        if(lines == NULL){
+            printf("Error allocating memory\n");
+            return 1;
+        }
         temp_file * current = temp_list->firstNode;
         while(current!=NULL){
             uint8_t linesizeBuffer[3];
@@ -293,6 +300,7 @@ int mergeFiles(int tempCount,int bufferSize){
                 linesize <<= 8;
                 linesize |= linesizeBuffer[2];
                 linesize >>= 3;
+                
                 lines[bufferIndex] = (uint8_t *) malloc(sizeof(uint8_t) * linesize + 3);
                 lines[bufferIndex][0] = linesizeBuffer[0];
                 lines[bufferIndex][1] = linesizeBuffer[1];
@@ -302,7 +310,9 @@ int mergeFiles(int tempCount,int bufferSize){
                 bufferIndex++;
             }
         }
+        //freeLines(lines, bufferIndex);
 
+        int lastSmallestIndex = -1;
         while(temp_list->size > 0){
             //TODO: fix, this is wrong (now ok i hope)
 
@@ -327,21 +337,24 @@ int mergeFiles(int tempCount,int bufferSize){
             if(bytesRead<3){
                 remove_temp_file(temp_list, smallestTemp->name);
             } else {
-
+                linesize = linesizeBuffer[0]<<8;
                 linesize |= linesizeBuffer[1];
                 linesize <<= 8;
                 linesize |= linesizeBuffer[2];
                 linesize >>= 3;
 
+                free(lines[smallestIndex]);
+                lastSmallestIndex = smallestIndex;
                 lines[smallestIndex] = (uint8_t *) malloc(sizeof(uint8_t) * (linesize + 3));
                 lines[smallestIndex][0] = linesizeBuffer[0];
                 lines[smallestIndex][1] = linesizeBuffer[1];
                 lines[smallestIndex][2] = linesizeBuffer[2];
 
                 fread(lines[smallestIndex] + 3, sizeof(uint8_t), linesize, smallestFile);
-            }
 
+            }
         }
+        free(lines[lastSmallestIndex]);
 
         remove_temp_file_list(temp_list);
 
@@ -352,6 +365,7 @@ int mergeFiles(int tempCount,int bufferSize){
 
 
     }
+
     return tempfiles;
 }
 

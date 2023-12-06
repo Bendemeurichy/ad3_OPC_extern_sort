@@ -1,6 +1,7 @@
 //
 // Created by bendm on 21/10/23.
 //
+
 #include <getopt.h>
 #include <string.h>
 #include <stdlib.h>
@@ -92,3 +93,4 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
+

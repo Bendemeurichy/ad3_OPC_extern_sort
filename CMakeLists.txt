@@ -19,4 +19,5 @@ add_executable(AD3_project
         src/tree/linked_list.h
         src/sort/sorting_linked_list.c
         src/sort/sorting_linked_list.h
+        test/test_compression.c
 )
