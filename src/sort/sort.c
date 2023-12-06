@@ -244,9 +244,7 @@ int compareLines(const void *a, const void *b){
 int mergeFiles(int tempCount,int bufferSize){
     int tempfiles = 0;
     int tempfilesOneStep = bufferSize/MAXLINELENGTH;
-    tempfilesOneStep =5;
     tempfiles = (tempCount+tempfilesOneStep)/tempfilesOneStep;
-    tempfiles = 1;
     uint8_t ** lines;
     for(int i=0;i<tempfiles;i++){
         int endCondition = 0;
