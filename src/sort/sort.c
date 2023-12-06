@@ -280,6 +280,7 @@ int mergeFiles(int tempCount,int bufferSize){
             return 1;
         }
 
+        //write first line of each file in buffer
         int bufferIndex = 0;
          lines=(uint8_t **) malloc(sizeof(uint8_t *)*temp_list->size);
         if(lines == NULL){
@@ -300,7 +301,7 @@ int mergeFiles(int tempCount,int bufferSize){
                 linesize <<= 8;
                 linesize |= linesizeBuffer[2];
                 linesize >>= 3;
-                
+
                 lines[bufferIndex] = (uint8_t *) malloc(sizeof(uint8_t) * linesize + 3);
                 lines[bufferIndex][0] = linesizeBuffer[0];
                 lines[bufferIndex][1] = linesizeBuffer[1];
@@ -310,9 +311,8 @@ int mergeFiles(int tempCount,int bufferSize){
                 bufferIndex++;
             }
         }
-        //freeLines(lines, bufferIndex);
 
-        int lastSmallestIndex = -1;
+
         while(temp_list->size > 0){
             //TODO: fix, this is wrong (now ok i hope)
 
@@ -325,8 +325,6 @@ int mergeFiles(int tempCount,int bufferSize){
             writelinesize >>= 3;
 
             fwrite(lines[smallestIndex], sizeof(uint8_t), writelinesize+3, largerTemp);
-            //free(lines[smallestIndex]);
-
 
             temp_file * smallestTemp = get_temp_file(temp_list, smallestIndex);
             FILE* smallestFile = smallestTemp->file;
@@ -344,7 +342,7 @@ int mergeFiles(int tempCount,int bufferSize){
                 linesize >>= 3;
 
                 free(lines[smallestIndex]);
-                lastSmallestIndex = smallestIndex;
+
                 lines[smallestIndex] = (uint8_t *) malloc(sizeof(uint8_t) * (linesize + 3));
                 lines[smallestIndex][0] = linesizeBuffer[0];
                 lines[smallestIndex][1] = linesizeBuffer[1];
@@ -354,8 +352,10 @@ int mergeFiles(int tempCount,int bufferSize){
 
             }
         }
-        free(lines[lastSmallestIndex]);
-
+        for(int k=0;k<tempCount;k++){
+            free(lines[k]);
+        }
+        free(lines);
         remove_temp_file_list(temp_list);
 
         char tempname[20];
