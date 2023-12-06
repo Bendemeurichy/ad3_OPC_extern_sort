@@ -44,6 +44,8 @@ int sort(char *inputFile, char *outputFile, int bufferSize) {
     int tempfiles = 0;
     tempfiles = blockSort(input, bufferSize);
 
+    fclose(input);
+
     //merge sorted blocks
     while (tempfiles>1){
         tempfiles = mergeFiles(tempfiles, bufferSize);
@@ -75,7 +77,6 @@ int sort(char *inputFile, char *outputFile, int bufferSize) {
 
 
     fclose(lasttemp);
-    fclose(input);
     fclose(output);
     remove("temp0.txt");
 
@@ -199,15 +200,18 @@ int blockSort(FILE *input, int bufferSize){
             return 1;
         }
         for (int i = 0; i < bufferIndex; i++) {
-            int currentlinesize = lines[i][1] << 8;
+            int currentlinesize = lines[i][0] << 8;
+            currentlinesize |= lines[i][1];
+            currentlinesize <<= 8;
             currentlinesize |= lines[i][2];
             fwrite(lines[i], sizeof(uint8_t), (currentlinesize>>3)+3, temp);
         }
         fclose(temp);
         buffersizeUsed = 0;
+        tempcount++;
     }
     freeLines(lines, bufferIndex);
-    return tempcount+1;
+    return tempcount;
 }
 
 
