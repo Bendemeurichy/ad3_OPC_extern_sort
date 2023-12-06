@@ -72,3 +72,11 @@ void remove_temp_file_list(temp_file_list* list){
     }
     free(list);
 }
+
+temp_file * get_temp_file(temp_file_list* list,int index){
+    temp_file * current=list->firstNode;
+for(int i=0;i<index;i++){
+        current=current->next;
+    }
+    return current;
+}

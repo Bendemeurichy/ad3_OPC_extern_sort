@@ -224,17 +224,34 @@ int compareLines(const void *a, const void *b){
     sizeb |= pb[2];
     sizeb >>= 3;
 
-    return memcmp(pa + 3,pb + 3,sizea < sizeb ? sizea : sizeb);
+    if(memcmp(pa + 3,pb + 3,sizea < sizeb ? sizea : sizeb)==0){
+        if(sizea == sizeb){
+            if((pa[2]|0b111) != (pb[2]|0b111)) {
+                return (pa[2] | 0b111) - (pb[2] | 0b111);
+            }else{
+                return 0;
+            }
+        }else{
+            return sizea-sizeb;
+        }
+    } else {
+        return memcmp(pa + 3,pb + 3,sizea < sizeb ? sizea : sizeb);
+    }
 }
 
 int mergeFiles(int tempCount,int bufferSize){
     int tempfiles = 0;
     int tempfilesOneStep = bufferSize/MAXLINELENGTH;
+    tempfilesOneStep =5;
     tempfiles = (tempCount+tempfilesOneStep)/tempfilesOneStep;
+    tempfiles = 1;
     for(int i=0;i<tempfiles;i++){
         int endCondition = 0;
         if(i == tempfiles-1){
             endCondition = tempCount%tempfilesOneStep;
+            if(endCondition == 0){
+                endCondition = tempfilesOneStep;
+            }
         } else {
             endCondition = tempfilesOneStep;
         }
@@ -260,42 +277,69 @@ int mergeFiles(int tempCount,int bufferSize){
             return 1;
         }
 
-        while(temp_list->size > 1){
-            int bufferIndex = 0;
-            uint8_t ** lines =(uint8_t **) malloc(sizeof(uint8_t *)*temp_list->size);
-            temp_file * current = temp_list->firstNode;
-            while(current->next!=NULL){
-                uint8_t linesizeBuffer[3];
-                uint16_t linesize=0;
-                size_t bytesRead = fread(linesizeBuffer, sizeof(uint8_t), 3, current->file);
-                if(bytesRead < 3){
-                    temp_file * next = current->next;
-                    remove_temp_file(temp_list, current->name);
-                    current = next;
-                } else {
-                    linesize |= linesizeBuffer[1];
-                    linesize <<= 8;
-                    linesize |= linesizeBuffer[2];
-                    linesize >>= 3;
-                    lines[bufferIndex] = (uint8_t *) malloc(sizeof(uint8_t) * linesize + 3);
-                    lines[bufferIndex][0] = linesizeBuffer[0];
-                    lines[bufferIndex][1] = linesizeBuffer[1];
-                    lines[bufferIndex][2] = linesizeBuffer[2];
-                    fread(lines[bufferIndex] + 3, sizeof(uint8_t), linesize, current->file);
-                    current = current->next;
-                    bufferIndex++;
-                }
+        int bufferIndex = 0;
+        uint8_t ** lines =(uint8_t **) malloc(sizeof(uint8_t *)*temp_list->size);
+        temp_file * current = temp_list->firstNode;
+        while(current!=NULL){
+            uint8_t linesizeBuffer[3];
+            uint16_t linesize=0;
+            size_t bytesRead = fread(linesizeBuffer, sizeof(uint8_t), 3, current->file);
+            if(bytesRead < 3){
+                temp_file * next = current->next;
+                remove_temp_file(temp_list, current->name);
+                current = next;
+            } else {
+                linesize |= linesizeBuffer[1];
+                linesize <<= 8;
+                linesize |= linesizeBuffer[2];
+                linesize >>= 3;
+                lines[bufferIndex] = (uint8_t *) malloc(sizeof(uint8_t) * linesize + 3);
+                lines[bufferIndex][0] = linesizeBuffer[0];
+                lines[bufferIndex][1] = linesizeBuffer[1];
+                lines[bufferIndex][2] = linesizeBuffer[2];
+                fread(lines[bufferIndex] + 3, sizeof(uint8_t), linesize, current->file);
+                current = current->next;
+                bufferIndex++;
             }
-            qsort(lines, bufferIndex, sizeof(uint8_t *), compareLines);
+        }
 
-            for (int j = 0; j < bufferIndex; j++) {
-                fwrite(lines[j], sizeof(uint8_t), ((lines[j][1]<<8|lines[j][2])>>3)+3, largerTemp);
+        while(temp_list->size > 0){
+            //TODO: fix, this is wrong (now ok i hope)
+
+            int smallestIndex = findSmallest(lines, temp_list->size);
+
+            uint32_t writelinesize = lines[smallestIndex][0] << 8;
+            writelinesize |= lines[smallestIndex][1];
+            writelinesize <<= 8;
+            writelinesize |= lines[smallestIndex][2];
+            writelinesize >>= 3;
+
+            fwrite(lines[smallestIndex], sizeof(uint8_t), writelinesize+3, largerTemp);
+            //free(lines[smallestIndex]);
+
+
+            temp_file * smallestTemp = get_temp_file(temp_list, smallestIndex);
+            FILE* smallestFile = smallestTemp->file;
+            uint8_t linesizeBuffer[3];
+            uint32_t linesize=0;
+            size_t bytesRead = fread(linesizeBuffer, sizeof(uint8_t), 3, smallestFile);
+
+            if(bytesRead<3){
+                remove_temp_file(temp_list, smallestTemp->name);
+            } else {
+
+                linesize |= linesizeBuffer[1];
+                linesize <<= 8;
+                linesize |= linesizeBuffer[2];
+                linesize >>= 3;
+
+                lines[smallestIndex] = (uint8_t *) malloc(sizeof(uint8_t) * (linesize + 3));
+                lines[smallestIndex][0] = linesizeBuffer[0];
+                lines[smallestIndex][1] = linesizeBuffer[1];
+                lines[smallestIndex][2] = linesizeBuffer[2];
+
+                fread(lines[smallestIndex] + 3, sizeof(uint8_t), linesize, smallestFile);
             }
-
-            freeLines(lines, bufferIndex);
-
-            bufferIndex = 0;
-
 
         }
 
@@ -308,9 +352,42 @@ int mergeFiles(int tempCount,int bufferSize){
 
 
     }
-
-
-
-
     return tempfiles;
+}
+
+int findSmallest(uint8_t** lines,int size){
+    int res = 0;
+    for(int i=1;i<size;i++){
+        if(comparePointers(lines[i],lines[res])<0){
+            res = i;
+        }
+    }
+    return res;
+}
+
+int comparePointers(uint8_t *a, uint8_t *b){
+    uint32_t sizea = a[0] << 8;
+    sizea |= a[1];
+    sizea<<=8;
+    sizea |= a[2];
+    sizea >>= 3;
+    uint32_t sizeb = b[0] << 8;
+    sizeb |= b[1];
+    sizeb<<=8;
+    sizeb |= b[2];
+    sizeb >>= 3;
+
+    if(memcmp(a + 3,b + 3,sizea < sizeb ? sizea : sizeb)==0){
+        if(sizea == sizeb){
+            if((a[2]|0b111) != (b[2]|0b111)) {
+                return (a[2] | 0b111) - (b[2] | 0b111);
+            }else{
+                return 0;
+            }
+        }else{
+            return sizea-sizeb;
+        }
+    } else {
+        return memcmp(a + 3,b + 3,sizea < sizeb ? sizea : sizeb);
+    }
 }
