@@ -1,0 +1,6 @@
+example.txt;0m0,001s
+tiny.txt;0m0,002s
+small.txt;0m0,078s
+smedium.txt;0m3,834s
+medium.txt;0m7,437s
+large.txt;0m40,271s
